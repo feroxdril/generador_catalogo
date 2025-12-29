@@ -52,6 +52,23 @@
             $('#wfx-select-all').prop('checked', visibleTotal > 0 && visibleChecked === visibleTotal);
         });
         
+        // Auto-guardar precio mayorista al cambiar
+        $('.wfx-wholesale-price').on('change', function() {
+            const productId = $(this).data('product-id');
+            const price = $(this).val();
+            
+            $.ajax({
+                url: wfxWholesale.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'wfx_save_wholesale_price',
+                    nonce: wfxWholesale.nonce,
+                    product_id: productId,
+                    price: price
+                }
+            });
+        });
+        
         // Guardar selección
         $('#wfx-save-selection').on('click', function() {
             var button = $(this);
