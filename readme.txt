@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -60,7 +60,7 @@ WFX Wholesale Catalog Generator es un plugin completo para WordPress y WooCommer
 
 = Después de la Instalación =
 
-1. Ejecuta `composer install` en el directorio del plugin, o instala TCPDF manualmente (ver lib/README.md)
+1. El plugin incluye TCPDF, no requiere instalación adicional
 2. Ve a 'Catálogo PDF' en el menú de administración
 3. Selecciona los productos que deseas incluir
 4. Define precios mayoristas si es necesario
@@ -71,7 +71,6 @@ WFX Wholesale Catalog Generator es un plugin completo para WordPress y WooCommer
 * WordPress 5.8 o superior
 * WooCommerce 5.0 o superior
 * PHP 7.4 o superior
-* Librería TCPDF (se instala con Composer o manualmente)
 
 == Frequently Asked Questions ==
 
@@ -81,9 +80,7 @@ Sí, este plugin está diseñado específicamente para trabajar con WooCommerce 
 
 = ¿Cómo instalo TCPDF? =
 
-Puedes instalar TCPDF de dos formas:
-1. Con Composer: ejecuta `composer install` en el directorio del plugin
-2. Manualmente: descarga TCPDF y colócalo en `lib/tcpdf/` (ver lib/README.md para detalles)
+TCPDF está incluido en el plugin desde la versión 1.1.0, no requiere instalación adicional.
 
 = ¿Puedo personalizar el diseño del PDF? =
 
@@ -118,7 +115,14 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 
 == Changelog ==
 
-= 1.0.0 =
+= 1.1.0 - 2025-12-29 =
+* Added: Compatibilidad con WooCommerce HPOS (High-Performance Order Storage)
+* Added: TCPDF incluido en el plugin
+* Improved: Mejor manejo de errores en generación de PDF
+* Improved: Auto-guardado de precios mayoristas
+* Fixed: Problemas de compatibilidad con WooCommerce 8.0+
+
+= 1.0.0 - 2025-12-29 =
 * Lanzamiento inicial
 * Selección visual de productos
 * Generación de PDF con TCPDF

@@ -23,6 +23,7 @@ class WFX_Wholesale_Admin {
         add_action('wp_ajax_wfx_generate_catalog', array(__CLASS__, 'ajax_generate_catalog'));
         add_action('wp_ajax_wfx_save_settings', array(__CLASS__, 'ajax_save_settings'));
         add_action('wp_ajax_wfx_save_selection', array(__CLASS__, 'ajax_save_selection'));
+        add_action('wp_ajax_wfx_save_wholesale_price', array(__CLASS__, 'ajax_save_wholesale_price'));
     }
     
     /**
@@ -137,7 +138,8 @@ class WFX_Wholesale_Admin {
                                            step="0.01"
                                            min="0"
                                            placeholder="0.00"
-                                           class="wfx-wholesale-price-input" />
+                                           class="wfx-wholesale-price wfx-wholesale-price-input"
+                                           data-product-id="<?php echo esc_attr($product_id); ?>" />
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -335,13 +337,19 @@ class WFX_Wholesale_Admin {
         check_ajax_referer('wfx_wholesale_nonce', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(array('message' => 'Permisos insuficientes'));
+            wp_send_json_error('Permisos insuficientes');
         }
         
         $product_ids = isset($_POST['product_ids']) ? array_map('intval', $_POST['product_ids']) : array();
+        $options = isset($_POST['options']) ? $_POST['options'] : array();
         
         if (empty($product_ids)) {
-            wp_send_json_error(array('message' => 'No hay productos seleccionados'));
+            wp_send_json_error('No se seleccionaron productos');
+        }
+        
+        // Verificar que TCPDF esté disponible
+        if (!class_exists('TCPDF')) {
+            wp_send_json_error('TCPDF no está disponible. Por favor contacte al administrador.');
         }
         
         try {
@@ -358,14 +366,14 @@ class WFX_Wholesale_Admin {
             
             if ($pdf_url) {
                 wp_send_json_success(array(
-                    'message' => 'Catálogo generado exitosamente',
                     'pdf_url' => $pdf_url,
+                    'message' => 'PDF generado correctamente'
                 ));
             } else {
-                wp_send_json_error(array('message' => 'Error al generar el catálogo'));
+                wp_send_json_error('Error al generar el PDF. Verifique los permisos de escritura.');
             }
         } catch (Exception $e) {
-            wp_send_json_error(array('message' => 'Error: ' . $e->getMessage()));
+            wp_send_json_error('Error: ' . $e->getMessage());
         }
     }
     
@@ -412,5 +420,26 @@ class WFX_Wholesale_Admin {
         update_option('wfx_wholesale_prices', $prices);
         
         wp_send_json_success(array('message' => 'Selección guardada exitosamente'));
+    }
+    
+    /**
+     * AJAX: Guarda el precio mayorista de un producto
+     */
+    public static function ajax_save_wholesale_price() {
+        check_ajax_referer('wfx_wholesale_nonce', 'nonce');
+        
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Permisos insuficientes');
+        }
+        
+        $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
+        $price = isset($_POST['price']) ? sanitize_text_field($_POST['price']) : '';
+        
+        if ($product_id && is_numeric($price)) {
+            update_post_meta($product_id, '_wfx_wholesale_price', $price);
+            wp_send_json_success('Precio actualizado');
+        } else {
+            wp_send_json_error('Datos inválidos');
+        }
     }
 }

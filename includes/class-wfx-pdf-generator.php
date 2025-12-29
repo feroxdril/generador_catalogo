@@ -29,15 +29,16 @@ class WFX_Wholesale_PDF_Generator {
      * Carga la librería TCPDF
      */
     private function load_tcpdf() {
-        // Intentar cargar desde vendor (Composer)
-        if (file_exists(WFX_WHOLESALE_PATH . 'vendor/autoload.php')) {
-            require_once WFX_WHOLESALE_PATH . 'vendor/autoload.php';
-        }
-        // Fallback a instalación manual
-        elseif (file_exists(WFX_WHOLESALE_PATH . 'lib/tcpdf/tcpdf.php')) {
+        // Intentar cargar TCPDF desde diferentes ubicaciones
+        if (file_exists(WFX_WHOLESALE_PATH . 'vendor/tecnickcom/tcpdf/tcpdf.php')) {
+            require_once WFX_WHOLESALE_PATH . 'vendor/tecnickcom/tcpdf/tcpdf.php';
+        } elseif (file_exists(WFX_WHOLESALE_PATH . 'lib/tcpdf/tcpdf.php')) {
             require_once WFX_WHOLESALE_PATH . 'lib/tcpdf/tcpdf.php';
         } else {
-            throw new Exception('TCPDF no está instalado. Por favor ejecute "composer install" o instale TCPDF manualmente en lib/tcpdf/');
+            add_action('admin_notices', function() {
+                echo '<div class="error"><p><strong>WFX Wholesale Catalog:</strong> TCPDF no está instalado. El plugin no funcionará correctamente.</p></div>';
+            });
+            return;
         }
     }
     
@@ -49,6 +50,12 @@ class WFX_Wholesale_PDF_Generator {
      * @return string|false URL del PDF generado o false en caso de error
      */
     public function generate($product_ids, $options = array()) {
+        // Validar que TCPDF esté disponible
+        if (!class_exists('TCPDF')) {
+            error_log('WFX Wholesale: TCPDF class not found');
+            return false;
+        }
+        
         try {
             $this->settings = isset($options['settings']) ? $options['settings'] : get_option('wfx_wholesale_settings', array());
             $this->prices = isset($options['prices']) ? $options['prices'] : get_option('wfx_wholesale_prices', array());
@@ -85,21 +92,19 @@ class WFX_Wholesale_PDF_Generator {
         $this->pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         
         // Información del documento
-        $this->pdf->SetCreator('WFX Wholesale Catalog Generator');
+        $this->pdf->SetCreator('WFX Wholesale Catalog');
         $this->pdf->SetAuthor($company_name);
         $this->pdf->SetTitle($catalog_title);
         $this->pdf->SetSubject('Catálogo de Productos Mayoristas');
         
-        // Configuración de página
-        $this->pdf->SetMargins(15, 15, 15);
-        $this->pdf->SetHeaderMargin(5);
-        $this->pdf->SetFooterMargin(10);
+        // Márgenes
+        $this->pdf->SetMargins(15, 30, 15);
         $this->pdf->SetAutoPageBreak(true, 25);
         
         // Fuente por defecto
         $this->pdf->SetFont('helvetica', '', 10);
         
-        // Desactivar header y footer automáticos
+        // Quitar header/footer por defecto
         $this->pdf->setPrintHeader(false);
         $this->pdf->setPrintFooter(false);
     }
@@ -334,23 +339,25 @@ class WFX_Wholesale_PDF_Generator {
      */
     private function save_pdf() {
         $upload_dir = wp_upload_dir();
-        $catalog_dir = $upload_dir['basedir'] . '/wfx-catalogs/';
+        $pdf_dir = $upload_dir['basedir'] . '/wfx-catalogs/';
         
         // Crear directorio si no existe
-        if (!file_exists($catalog_dir)) {
-            wp_mkdir_p($catalog_dir);
+        if (!file_exists($pdf_dir)) {
+            wp_mkdir_p($pdf_dir);
         }
         
-        // Nombre del archivo
-        $filename = 'catalogo-mayorista-' . date('Y-m-d-His') . '.pdf';
-        $filepath = $catalog_dir . $filename;
+        // Nombre único para el archivo
+        $filename = 'catalogo-mayorista-' . date('Y-m-d-His') . '-' . wp_generate_password(8, false) . '.pdf';
+        $filepath = $pdf_dir . $filename;
         
         // Guardar PDF
         $this->pdf->Output($filepath, 'F');
         
-        // Retornar URL
-        $file_url = $upload_dir['baseurl'] . '/wfx-catalogs/' . $filename;
+        // Verificar que se creó correctamente
+        if (file_exists($filepath)) {
+            return $upload_dir['baseurl'] . '/wfx-catalogs/' . $filename;
+        }
         
-        return $file_url;
+        return false;
     }
 }

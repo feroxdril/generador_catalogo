@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -46,7 +46,6 @@ WFX Wholesale Catalog Generator es un plugin completo que permite a tiendas onli
 - WordPress 5.8 o superior
 - WooCommerce 5.0 o superior
 - PHP 7.4 o superior
-- Librería TCPDF (se instala automáticamente con Composer)
 
 ## 🚀 Instalación
 
@@ -56,7 +55,6 @@ WFX Wholesale Catalog Generator es un plugin completo que permite a tiendas onli
 2. Ve a **Plugins > Añadir nuevo > Subir plugin** en WordPress
 3. Selecciona el archivo ZIP y haz clic en **Instalar ahora**
 4. Activa el plugin
-5. Instala TCPDF (ver sección siguiente)
 
 ### Opción 2: Instalación Manual
 
@@ -66,22 +64,7 @@ cd wp-content/plugins/
 git clone https://github.com/feroxdril/generador_catalogo.git wfx-wholesale-catalog
 ```
 
-### Instalación de TCPDF
-
-#### Con Composer (Recomendado)
-
-```bash
-cd wp-content/plugins/wfx-wholesale-catalog/
-composer install
-```
-
-#### Instalación Manual
-
-1. Descarga TCPDF desde: https://github.com/tecnickcom/TCPDF/releases
-2. Extrae el contenido en `lib/tcpdf/`
-3. Asegúrate de que exista el archivo `lib/tcpdf/tcpdf.php`
-
-Ver `lib/README.md` para más detalles.
+**Nota:** TCPDF está incluido en el plugin desde la versión 1.1.0
 
 ## 📖 Uso
 
@@ -180,6 +163,14 @@ _(Las capturas se añadirán en futuras versiones)_
 
 ## 🔄 Changelog
 
+### Version 1.1.0 (2025-12-29)
+✅ Declarada compatibilidad con WooCommerce HPOS  
+✅ TCPDF incluido en el plugin (no requiere instalación manual)  
+✅ Mejorado el manejo de errores  
+✅ Auto-guardado de precios mayoristas  
+✅ Optimización general del código  
+🐛 Corregidos problemas de compatibilidad
+
 ### Versión 1.0.0 (2024-12-29)
 
 - ✨ Lanzamiento inicial
@@ -250,8 +241,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 **Desarrollado por**: WFX Telematics  
 **Autor**: WFX Telematics  
-**Versión**: 1.0.0  
-**Última actualización**: 2024-12-29
+**Versión**: 1.1.0  
+**Última actualización**: 2025-12-29
 
 ## 🙏 Agradecimientos
 
