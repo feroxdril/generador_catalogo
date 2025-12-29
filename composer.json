@@ -1,0 +1,13 @@
+{
+    "name": "wfx/wholesale-catalog",
+    "description": "Plugin de WordPress para generar catálogos PDF mayoristas con WooCommerce",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4",
+        "tecnickcom/tcpdf": "^6.6"
+    },
+    "autoload": {
+        "classmap": ["includes/"]
+    }
+}
