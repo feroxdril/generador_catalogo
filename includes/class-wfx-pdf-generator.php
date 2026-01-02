@@ -237,7 +237,7 @@ class WFX_PDF_Generator {
                 $image_path = $this->get_image_path(wp_get_attachment_url($image_id));
                 if ($image_path && file_exists($image_path)) {
                     try {
-                        $image_info = @getimagesize($image_path);
+                        $image_info = getimagesize($image_path);
                         
                         if ($image_info !== false) {
                             list($original_width, $original_height) = $image_info;
@@ -395,9 +395,6 @@ class WFX_PDF_Generator {
             $pdf->SetFillColor(248, 249, 250);
             $pdf->SetDrawColor(222, 226, 230);
             $pdf->Rect($x_margin, $y_start, $page_width, $actual_box_height, 'FD');
-            
-            // Nota: En TCPDF cuando redibujamos el fondo, no cubre los elementos ya dibujados
-            // porque TCPDF mantiene las capas en el orden correcto
         }
         
         // Ajustar posición para siguiente producto
@@ -519,11 +516,16 @@ class WFX_PDF_Generator {
         if (file_exists($path)) {
             $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif');
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime_type = finfo_file($finfo, $path);
-            finfo_close($finfo);
             
-            if (in_array($mime_type, $allowed_types)) {
-                return $path;
+            if ($finfo !== false) {
+                $mime_type = finfo_file($finfo, $path);
+                finfo_close($finfo);
+                
+                if ($mime_type !== false && in_array($mime_type, $allowed_types)) {
+                    return $path;
+                }
+            } else {
+                error_log('WFX Wholesale: finfo_open failed for: ' . $path);
             }
         }
         
