@@ -69,6 +69,44 @@
             });
         });
         
+        // Auto-guardar compra mínima al cambiar
+        $('.wfx-minimum-order').on('change', function() {
+            const $input = $(this);
+            const productId = $input.data('product-id');
+            const minimumOrder = $input.val();
+            
+            // Indicador visual de guardando
+            $input.css('border-color', '#f0ad4e');
+            
+            $.ajax({
+                url: wfxWholesale.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'wfx_save_minimum_order',
+                    nonce: wfxWholesale.nonce,
+                    product_id: productId,
+                    minimum_order: minimumOrder
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Indicador de éxito
+                        $input.css('border-color', '#28a745');
+                        setTimeout(function() {
+                            $input.css('border-color', '');
+                        }, 1500);
+                    } else {
+                        // Indicador de error
+                        $input.css('border-color', '#dc3545');
+                        console.error('Error al guardar:', response.data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $input.css('border-color', '#dc3545');
+                    console.error('Error AJAX:', error);
+                }
+            });
+        });
+        
         // Guardar selección
         $('#wfx-save-selection').on('click', function() {
             var button = $(this);

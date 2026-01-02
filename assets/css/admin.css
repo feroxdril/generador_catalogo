@@ -150,7 +150,7 @@
 }
 
 .wfx-product-wholesale {
-    width: 150px;
+    width: 200px;
     flex-shrink: 0;
 }
 
@@ -175,6 +175,57 @@
     border-color: #2271b1;
     outline: none;
     box-shadow: 0 0 0 1px #2271b1;
+}
+
+/* Campo de compra mínima */
+.wfx-pricing-field {
+    margin-bottom: 15px;
+}
+
+.wfx-pricing-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    color: #23282d;
+}
+
+.wfx-minimum-order-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wfx-minimum-order {
+    width: 80px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.wfx-minimum-order:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wfx-unit-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Animación de guardado */
+.wfx-minimum-order.saving {
+    border-color: #f0ad4e !important;
+}
+
+.wfx-minimum-order.saved {
+    border-color: #28a745 !important;
+}
+
+.wfx-minimum-order.error {
+    border-color: #dc3545 !important;
 }
 
 /* Sidebar */

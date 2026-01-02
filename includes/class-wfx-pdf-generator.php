@@ -339,7 +339,7 @@ class WFX_PDF_Generator {
         $pdf->SetFont('helvetica', 'B', 9);
         $pdf->SetXY($content_x, $current_y);
         $pdf->SetTextColor(13, 110, 253);
-        $pdf->Cell($content_width, 5, $this->decode_utf8('🛒 Compra mínima: ' . $minimum_order . ' unidades'), 0, 1, 'L');
+        $pdf->Cell($content_width, 5, 'Compra minima: ' . $minimum_order . ' unidades', 0, 1, 'L');
         $current_y = $pdf->GetY() + 2;
         
         // ============ PRECIO MAYORISTA ============

@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.1.4-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.5-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -162,6 +162,17 @@ _(Las capturas se añadirán en futuras versiones)_
 4. **Meta Box**: Campos en productos individuales
 
 ## 🔄 Changelog
+
+### Version 1.1.5 (2026-01-02)
+🔧 **Correcciones Críticas:**
+- Fixed: Eliminado emoji 🛒 que causaba signo ? en PDF
+- Added: Campo "Compra Mínima" en lista de productos del panel admin
+- Added: Auto-guardado de compra mínima con AJAX
+- Improved: Interfaz de usuario consistente para precio y compra mínima
+- Added: Indicadores visuales de guardado (verde/rojo/amarillo)
+- Fixed: Encoding de caracteres en PDF (usa "minima" sin tilde)
+- Improved: CSS para campos de compra mínima con diseño profesional
+- Added: Endpoint AJAX `wfx_save_minimum_order` para guardar datos
 
 ### Version 1.1.4 (2026-01-02)
 🔧 **Correcciones:**
