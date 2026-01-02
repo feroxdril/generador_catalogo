@@ -338,6 +338,7 @@ class WFX_Wholesale_Admin {
         
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error('Permisos insuficientes');
+            return;
         }
         
         $product_ids = isset($_POST['product_ids']) ? array_map('intval', $_POST['product_ids']) : array();
@@ -345,35 +346,50 @@ class WFX_Wholesale_Admin {
         
         if (empty($product_ids)) {
             wp_send_json_error('No se seleccionaron productos');
+            return;
         }
         
-        // Verificar que TCPDF esté disponible
-        if (!class_exists('TCPDF')) {
-            wp_send_json_error('TCPDF no está disponible. Por favor contacte al administrador.');
-        }
+        // Validar opciones
+        $options = wp_parse_args($options, array(
+            'include_images' => true,
+            'include_descriptions' => true,
+            'include_sku' => true,
+            'include_stock' => false,
+            'sort_by' => 'name'
+        ));
         
         try {
-            $generator = new WFX_Wholesale_PDF_Generator();
-            $settings = get_option('wfx_wholesale_settings', array());
-            $prices = get_option('wfx_wholesale_prices', array());
-            
-            $options = array(
-                'settings' => $settings,
-                'prices' => $prices,
-            );
-            
-            $pdf_url = $generator->generate($product_ids, $options);
+            $pdf_generator = new WFX_PDF_Generator();
+            $pdf_url = $pdf_generator->generate($product_ids, $options);
             
             if ($pdf_url) {
                 wp_send_json_success(array(
                     'pdf_url' => $pdf_url,
-                    'message' => 'PDF generado correctamente'
+                    'message' => 'PDF generado correctamente',
+                    'products_count' => count($product_ids)
                 ));
             } else {
-                wp_send_json_error('Error al generar el PDF. Verifique los permisos de escritura.');
+                // Verificar errores específicos
+                $error_msg = 'Error al generar el PDF.';
+                
+                // Verificar TCPDF
+                if (!class_exists('TCPDF')) {
+                    $error_msg = 'TCPDF no está disponible. Por favor contacte al administrador.';
+                } else {
+                    // Verificar permisos de carpeta
+                    $upload_dir = wp_upload_dir();
+                    $pdf_dir = $upload_dir['basedir'] . '/wfx-catalogs/';
+                    
+                    if (!is_writable($pdf_dir)) {
+                        $error_msg = 'No hay permisos de escritura en la carpeta de catálogos.';
+                    }
+                }
+                
+                wp_send_json_error($error_msg);
             }
         } catch (Exception $e) {
-            wp_send_json_error('Error: ' . $e->getMessage());
+            error_log('WFX Wholesale AJAX Error: ' . $e->getMessage());
+            wp_send_json_error('Error inesperado: ' . $e->getMessage());
         }
     }
     

@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -163,6 +163,27 @@ _(Las capturas se añadirán en futuras versiones)_
 
 ## 🔄 Changelog
 
+### Version 1.1.1 (2026-01-02)
+🔧 **Correcciones Críticas:**
+- Fixed: Corregida detección de TCPDF en `/lib/tcpdf/`
+- Fixed: Ruta de carga de TCPDF con múltiples ubicaciones de fallback
+- Fixed: Validación de disponibilidad de TCPDF antes de generar PDF
+- Fixed: Mejor manejo de errores en generación de PDF
+- Fixed: Validación de permisos de carpeta antes de escribir
+
+🎨 **Mejoras:**
+- Improved: Mensajes de error más descriptivos y útiles
+- Improved: Logs de debug para troubleshooting
+- Improved: Validación de imágenes antes de incluir en PDF
+- Improved: Limpieza de texto mejorada para caracteres especiales
+- Improved: Manejo de productos sin imagen
+- Improved: Formateo de precios con separadores de miles
+
+📖 **Documentación:**
+- Added: Logs detallados para debugging
+- Added: Comentarios en código para mantenimiento
+- Updated: README con instrucciones de troubleshooting
+
 ### Version 1.1.0 (2025-12-29)
 ✅ Declarada compatibilidad con WooCommerce HPOS  
 ✅ TCPDF incluido en el plugin (no requiere instalación manual)  
@@ -241,8 +262,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 **Desarrollado por**: WFX Telematics  
 **Autor**: WFX Telematics  
-**Versión**: 1.1.0  
-**Última actualización**: 2025-12-29
+**Versión**: 1.1.1  
+**Última actualización**: 2026-01-02
 
 ## 🙏 Agradecimientos
 
