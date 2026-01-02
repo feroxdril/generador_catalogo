@@ -287,7 +287,7 @@ class WFX_PDF_Generator {
                 $clean_desc = $this->clean_text(wp_strip_all_tags($description));
                 $full_length = strlen($clean_desc);
                 $clean_desc = substr($clean_desc, 0, 350);
-                if (strlen($clean_desc) < $full_length) {
+                if ($full_length > 350) {
                     $clean_desc .= '...';
                 }
                 $pdf->SetXY($content_x, $current_y);
