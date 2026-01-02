@@ -525,7 +525,7 @@ class WFX_PDF_Generator {
                     return $path;
                 }
             } else {
-                error_log('WFX Wholesale: finfo_open failed for: ' . $path);
+                error_log('WFX Wholesale: finfo_open failed - unable to validate image MIME type');
             }
         }
         
@@ -591,6 +591,13 @@ class WFX_PDF_Generator {
     
     /**
      * Dibujar placeholder cuando no hay imagen
+     * 
+     * @param TCPDF $pdf Instancia del objeto PDF
+     * @param float $x Posición X del placeholder
+     * @param float $y Posición Y del placeholder
+     * @param float $width Ancho del placeholder en mm
+     * @param float $height Alto del placeholder en mm
+     * @param string $text Texto a mostrar en el placeholder (por defecto 'Sin imagen')
      */
     private function draw_image_placeholder($pdf, $x, $y, $width, $height, $text = 'Sin imagen') {
         $pdf->SetDrawColor(200, 200, 200);
