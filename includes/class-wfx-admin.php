@@ -24,6 +24,7 @@ class WFX_Wholesale_Admin {
         add_action('wp_ajax_wfx_save_settings', array(__CLASS__, 'ajax_save_settings'));
         add_action('wp_ajax_wfx_save_selection', array(__CLASS__, 'ajax_save_selection'));
         add_action('wp_ajax_wfx_save_wholesale_price', array(__CLASS__, 'ajax_save_wholesale_price'));
+        add_action('wp_ajax_wfx_save_minimum_order', array(__CLASS__, 'ajax_save_minimum_order'));
     }
     
     /**
@@ -105,6 +106,13 @@ class WFX_Wholesale_Admin {
                             $product_id = $product->get_id();
                             $is_checked = in_array($product_id, $saved_selection);
                             $wholesale_price = isset($saved_prices[$product_id]) ? $saved_prices[$product_id] : '';
+                            $minimum_order = get_post_meta($product_id, '_wfx_minimum_order', true);
+                            // Only use default if meta doesn't exist (returns false) or is empty string
+                            // This allows 0 to be a valid value (no minimum requirement)
+                            if ($minimum_order === false || $minimum_order === '') {
+                                $settings = get_option('wfx_wholesale_settings', array());
+                                $minimum_order = isset($settings['default_minimum_order']) ? $settings['default_minimum_order'] : '';
+                            }
                             $image_url = wp_get_attachment_image_url($product->get_image_id(), 'thumbnail');
                             if (!$image_url) {
                                 $image_url = wc_placeholder_img_src();
@@ -131,15 +139,37 @@ class WFX_Wholesale_Admin {
                                 </div>
                                 
                                 <div class="wfx-product-wholesale">
-                                    <label>Precio Mayorista:</label>
-                                    <input type="number" 
-                                           name="wfx_wholesale_price[<?php echo esc_attr($product_id); ?>]"
-                                           value="<?php echo esc_attr($wholesale_price); ?>"
-                                           step="0.01"
-                                           min="0"
-                                           placeholder="0.00"
-                                           class="wfx-wholesale-price wfx-wholesale-price-input"
-                                           data-product-id="<?php echo esc_attr($product_id); ?>" />
+                                    <div class="wfx-pricing-field">
+                                        <label for="price-<?php echo esc_attr($product_id); ?>">
+                                            <strong>Precio Mayorista:</strong>
+                                        </label>
+                                        <input type="number" 
+                                               id="price-<?php echo esc_attr($product_id); ?>"
+                                               name="wfx_wholesale_price[<?php echo esc_attr($product_id); ?>]"
+                                               value="<?php echo esc_attr($wholesale_price); ?>"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="Ej: 8900"
+                                               class="wfx-wholesale-price wfx-wholesale-price-input"
+                                               data-product-id="<?php echo esc_attr($product_id); ?>" />
+                                    </div>
+                                    
+                                    <div class="wfx-pricing-field">
+                                        <label for="minimum-<?php echo esc_attr($product_id); ?>">
+                                            <strong>Compra Mínima:</strong>
+                                        </label>
+                                        <div class="wfx-minimum-order-container">
+                                            <input type="number" 
+                                                   id="minimum-<?php echo esc_attr($product_id); ?>"
+                                                   class="wfx-minimum-order" 
+                                                   data-product-id="<?php echo esc_attr($product_id); ?>"
+                                                   value="<?php echo esc_attr($minimum_order); ?>" 
+                                                   step="1" 
+                                                   min="0"
+                                                   placeholder="Ej: 10" />
+                                            <span class="wfx-unit-label">unidades</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -462,7 +492,8 @@ class WFX_Wholesale_Admin {
         check_ajax_referer('wfx_wholesale_nonce', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Permisos insuficientes');
+            wp_send_json_error(array('message' => 'Permisos insuficientes'));
+            return;
         }
         
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
@@ -470,9 +501,44 @@ class WFX_Wholesale_Admin {
         
         if ($product_id && is_numeric($price)) {
             update_post_meta($product_id, '_wfx_wholesale_price', $price);
-            wp_send_json_success('Precio actualizado');
+            wp_send_json_success(array('message' => 'Precio actualizado'));
         } else {
-            wp_send_json_error('Datos inválidos');
+            wp_send_json_error(array('message' => 'Datos inválidos'));
         }
+    }
+    
+    /**
+     * AJAX: Guarda la compra mínima de un producto
+     */
+    public static function ajax_save_minimum_order() {
+        check_ajax_referer('wfx_wholesale_nonce', 'nonce');
+        
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => 'Permisos insuficientes'));
+            return;
+        }
+        
+        $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+        $minimum_order = isset($_POST['minimum_order']) ? absint($_POST['minimum_order']) : 0;
+        
+        // Validar que el ID de producto sea válido
+        if ($product_id <= 0) {
+            wp_send_json_error(array('message' => 'ID de producto inválido'));
+            return;
+        }
+        
+        // Validar que la cantidad mínima no sea negativa
+        // Nota: 0 es un valor válido que indica "sin mínimo requerido"
+        if ($minimum_order < 0) {
+            wp_send_json_error(array('message' => 'La cantidad mínima no puede ser negativa'));
+            return;
+        }
+        
+        update_post_meta($product_id, '_wfx_minimum_order', $minimum_order);
+        wp_send_json_success(array(
+            'message' => 'Compra mínima actualizada',
+            'product_id' => $product_id,
+            'minimum_order' => $minimum_order
+        ));
     }
 }

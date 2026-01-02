@@ -331,16 +331,21 @@ class WFX_PDF_Generator {
         
         // Compra mínima
         $minimum_order = get_post_meta($product_id, '_wfx_minimum_order', true);
-        if (empty($minimum_order) || !is_numeric($minimum_order)) {
+        // Only use default if meta doesn't exist or is not numeric
+        // This allows 0 to be a valid value (no minimum requirement)
+        if (($minimum_order === false || $minimum_order === '') && !is_numeric($minimum_order)) {
             $settings = get_option('wfx_wholesale_settings', array());
             $minimum_order = isset($settings['default_minimum_order']) ? $settings['default_minimum_order'] : 5;
         }
         
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->SetXY($content_x, $current_y);
-        $pdf->SetTextColor(13, 110, 253);
-        $pdf->Cell($content_width, 5, $this->decode_utf8('🛒 Compra mínima: ' . $minimum_order . ' unidades'), 0, 1, 'L');
-        $current_y = $pdf->GetY() + 2;
+        // Only show minimum order if it's greater than 0
+        if ($minimum_order > 0) {
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->SetXY($content_x, $current_y);
+            $pdf->SetTextColor(13, 110, 253);
+            $pdf->Cell($content_width, 5, 'Compra minima: ' . $minimum_order . ' unidades', 0, 1, 'L');
+            $current_y = $pdf->GetY() + 2;
+        }
         
         // ============ PRECIO MAYORISTA ============
         $wholesale_price = get_post_meta($product_id, '_wfx_wholesale_price', true);
