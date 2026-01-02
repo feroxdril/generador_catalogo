@@ -206,27 +206,30 @@ class WFX_PDF_Generator {
         $product_id = $product->get_id();
         $y_start = $pdf->GetY();
         $x_margin = 15;
-        $page_width = 180; // Ancho útil de la página
+        $page_width = 180;
         
-        // Verificar si hay espacio suficiente (al menos 70mm)
-        if ($y_start > 220) {
+        // Verificar si hay espacio suficiente
+        if ($y_start > 210) {
             $pdf->AddPage();
             $y_start = $pdf->GetY();
         }
         
-        // Dibujar caja de fondo para el producto
+        $padding = 5;
+        
+        // Calcular altura mínima necesaria (será ajustada después)
+        $min_box_height = 70;
+        
+        // Dibujar caja de fondo inicial (será redibujada con altura correcta)
         $pdf->SetFillColor(248, 249, 250);
         $pdf->SetDrawColor(222, 226, 230);
-        $box_height = 65; // Altura estimada de la caja
-        $pdf->Rect($x_margin, $y_start, $page_width, $box_height, 'DF');
+        $pdf->Rect($x_margin, $y_start, $page_width, $min_box_height, 'FD');
         
-        // Espaciado interno
-        $padding = 5;
-        $y_start += $padding;
+        $content_y = $y_start + $padding;
         
-        // Imagen del producto (más grande)
+        // ============ IMAGEN DEL PRODUCTO ============
         $image_x = $x_margin + $padding;
-        $image_width = 60; // Aumentado de 35 a 60
+        $image_width = 60;
+        $image_height = 60;
         
         if (!empty($options['include_images'])) {
             $image_id = $product->get_image_id();
@@ -234,36 +237,69 @@ class WFX_PDF_Generator {
                 $image_path = $this->get_image_path(wp_get_attachment_url($image_id));
                 if ($image_path && file_exists($image_path)) {
                     try {
-                        // Dibujar borde para la imagen
-                        $pdf->SetDrawColor(200, 200, 200);
-                        $pdf->Rect($image_x, $y_start, $image_width, $image_width, 'D');
-                        $pdf->Image($image_path, $image_x + 2, $y_start + 2, $image_width - 4, 0, '', '', '', false, 300, '', false, false, 0);
+                        $image_info = @getimagesize($image_path);
+                        
+                        if ($image_info !== false) {
+                            list($original_width, $original_height) = $image_info;
+                            
+                            if ($original_width > 0 && $original_height > 0) {
+                                // Calcular dimensiones proporcionales
+                                $ratio = $original_height / $original_width;
+                                
+                                if ($ratio > 1) {
+                                    // Imagen vertical
+                                    $calculated_height = min($image_height, $image_width * $ratio);
+                                    $calculated_width = $calculated_height / $ratio;
+                                } else {
+                                    // Imagen horizontal o cuadrada
+                                    $calculated_width = $image_width;
+                                    $calculated_height = $image_width * $ratio;
+                                    
+                                    if ($calculated_height > $image_height) {
+                                        $calculated_height = $image_height;
+                                        $calculated_width = $image_height / $ratio;
+                                    }
+                                }
+                                
+                                // Centrar imagen en el contenedor
+                                $image_offset_x = $image_x + (($image_width - $calculated_width) / 2);
+                                $image_offset_y = $content_y + (($image_height - $calculated_height) / 2);
+                                
+                                // Dibujar contenedor
+                                $pdf->SetDrawColor(200, 200, 200);
+                                $pdf->Rect($image_x, $content_y, $image_width, $image_height, 'D');
+                                
+                                // Insertar imagen
+                                $pdf->Image($image_path, $image_offset_x, $image_offset_y, $calculated_width, $calculated_height, '', '', '', false, 300, '', false, false, 0);
+                            }
+                        } else {
+                            $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error de imagen');
+                        }
                     } catch (Exception $e) {
                         error_log('WFX Wholesale: Product image error: ' . $e->getMessage());
+                        $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error de imagen');
                     }
+                } else {
+                    $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Sin imagen');
                 }
             } else {
-                // Placeholder si no hay imagen
-                $pdf->SetFont('helvetica', 'I', 8);
-                $pdf->SetTextColor(150, 150, 150);
-                $pdf->SetXY($image_x, $y_start + 25);
-                $pdf->Cell($image_width, 10, 'Sin imagen', 0, 0, 'C');
+                $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Sin imagen');
             }
         }
         
-        // Contenido del producto
+        // ============ CONTENIDO DEL PRODUCTO ============
         $content_x = $image_x + $image_width + 8;
         $content_width = 80;
+        $current_y = $content_y;
         
-        // Nombre del producto (más grande y destacado)
+        // Nombre del producto
         $pdf->SetFont('helvetica', 'B', 13);
         $pdf->SetTextColor(33, 37, 41);
-        $pdf->SetXY($content_x, $y_start);
+        $pdf->SetXY($content_x, $current_y);
         $pdf->MultiCell($content_width, 6, $this->clean_text($product->get_name()), 0, 'L', false, 1);
-        
         $current_y = $pdf->GetY() + 2;
         
-        // SKU (estilo badge)
+        // SKU
         if (!empty($options['include_sku']) && $product->get_sku()) {
             $pdf->SetFont('helvetica', 'B', 8);
             $pdf->SetTextColor(255, 255, 255);
@@ -285,8 +321,6 @@ class WFX_PDF_Generator {
                 $pdf->SetFont('helvetica', '', 9);
                 $pdf->SetTextColor(73, 80, 87);
                 $clean_desc = $this->clean_text(wp_strip_all_tags($description));
-                
-                // Usar smart_truncate para corte inteligente
                 $clean_desc = $this->smart_truncate($clean_desc, 400);
                 
                 $pdf->SetXY($content_x, $current_y);
@@ -295,10 +329,8 @@ class WFX_PDF_Generator {
             }
         }
         
-        // Compra mínima (reemplaza a stock)
+        // Compra mínima
         $minimum_order = get_post_meta($product_id, '_wfx_minimum_order', true);
-        
-        // Si no está definido, usar valor por defecto de configuración
         if (empty($minimum_order) || !is_numeric($minimum_order)) {
             $settings = get_option('wfx_wholesale_settings', array());
             $minimum_order = isset($settings['default_minimum_order']) ? $settings['default_minimum_order'] : 5;
@@ -306,11 +338,11 @@ class WFX_PDF_Generator {
         
         $pdf->SetFont('helvetica', 'B', 9);
         $pdf->SetXY($content_x, $current_y);
-        $pdf->SetTextColor(13, 110, 253); // Azul
+        $pdf->SetTextColor(13, 110, 253);
         $pdf->Cell($content_width, 5, $this->decode_utf8('🛒 Compra mínima: ' . $minimum_order . ' unidades'), 0, 1, 'L');
         $current_y = $pdf->GetY() + 2;
         
-        // PRECIO MAYORISTA (destacado a la derecha con diseño mejorado)
+        // ============ PRECIO MAYORISTA ============
         $wholesale_price = get_post_meta($product_id, '_wfx_wholesale_price', true);
         $regular_price = $product->get_regular_price();
         
@@ -324,42 +356,52 @@ class WFX_PDF_Generator {
             
             // Caja para el precio
             $pdf->SetFillColor(13, 110, 253);
-            $pdf->Rect($price_x, $y_start, $price_width, 20, 'F');
+            $pdf->Rect($price_x, $content_y, $price_width, 20, 'F');
             
-            // Etiqueta "PRECIO MAYORISTA"
+            // Etiqueta
             $pdf->SetFont('helvetica', 'B', 6);
             $pdf->SetTextColor(255, 255, 255);
-            $pdf->SetXY($price_x, $y_start + 2);
+            $pdf->SetXY($price_x, $content_y + 2);
             $pdf->Cell($price_width, 3, 'PRECIO MAYORISTA', 0, 1, 'C');
             
             // Precio
             $pdf->SetFont('helvetica', 'B', 16);
-            $pdf->SetTextColor(255, 255, 255);
-            
             $currency = $this->get_currency_symbol();
             $price_formatted = $currency . ' ' . number_format((float)$wholesale_price, 0, ',', '.');
             
-            $pdf->SetXY($price_x, $y_start + 7);
+            $pdf->SetXY($price_x, $content_y + 7);
             $pdf->Cell($price_width, 10, $price_formatted, 0, 0, 'C');
             
-            // Mostrar precio regular tachado si es diferente
+            // Precio regular tachado
             if (!empty($regular_price) && $regular_price != $wholesale_price && is_numeric($regular_price)) {
                 $pdf->SetFont('helvetica', '', 8);
                 $pdf->SetTextColor(100, 100, 100);
                 $regular_formatted = $currency . ' ' . number_format((float)$regular_price, 0, ',', '.');
-                $pdf->SetXY($price_x, $y_start + 22);
+                $pdf->SetXY($price_x, $content_y + 22);
                 
-                // Texto tachado
                 $text_width = $pdf->GetStringWidth($regular_formatted);
                 $text_x = $price_x + ($price_width - $text_width) / 2;
                 $pdf->Cell($price_width, 4, $regular_formatted, 0, 0, 'C');
-                $pdf->Line($text_x, $y_start + 24, $text_x + $text_width, $y_start + 24);
+                $pdf->Line($text_x, $content_y + 24, $text_x + $text_width, $content_y + 24);
             }
         }
         
-        // Ajustar posición Y para siguiente producto
-        $row_height = max($box_height, $image_width + $padding * 2);
-        $pdf->SetY($y_start + $row_height + 5);
+        // ============ CALCULAR ALTURA FINAL Y AJUSTAR CAJA SI ES NECESARIO ============
+        $content_height = max($current_y - $content_y, $image_height);
+        $actual_box_height = $content_height + ($padding * 2);
+        
+        // Si la altura calculada es mayor que la mínima, redibujar la caja con la altura correcta
+        if ($actual_box_height > $min_box_height) {
+            $pdf->SetFillColor(248, 249, 250);
+            $pdf->SetDrawColor(222, 226, 230);
+            $pdf->Rect($x_margin, $y_start, $page_width, $actual_box_height, 'FD');
+            
+            // Nota: En TCPDF cuando redibujamos el fondo, no cubre los elementos ya dibujados
+            // porque TCPDF mantiene las capas en el orden correcto
+        }
+        
+        // Ajustar posición para siguiente producto
+        $pdf->SetY($y_start + max($actual_box_height, $min_box_height) + 5);
     }
     
     /**
@@ -467,10 +509,25 @@ class WFX_PDF_Generator {
             return false;
         }
         
+        // Limpiar URL
+        $url = esc_url_raw($url);
+        
         $upload_dir = wp_upload_dir();
         $path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $url);
         
-        return $path;
+        // Verificar que el archivo existe y es una imagen válida
+        if (file_exists($path)) {
+            $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif');
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime_type = finfo_file($finfo, $path);
+            finfo_close($finfo);
+            
+            if (in_array($mime_type, $allowed_types)) {
+                return $path;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -528,6 +585,19 @@ class WFX_PDF_Generator {
      */
     private function decode_utf8($text) {
         return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+    
+    /**
+     * Dibujar placeholder cuando no hay imagen
+     */
+    private function draw_image_placeholder($pdf, $x, $y, $width, $height, $text = 'Sin imagen') {
+        $pdf->SetDrawColor(200, 200, 200);
+        $pdf->Rect($x, $y, $width, $height, 'D');
+        
+        $pdf->SetFont('helvetica', 'I', 8);
+        $pdf->SetTextColor(150, 150, 150);
+        $pdf->SetXY($x, $y + ($height / 2) - 2);
+        $pdf->Cell($width, 4, $text, 0, 0, 'C');
     }
     
     /**
