@@ -163,7 +163,7 @@ class WFX_Wholesale_Admin {
                                                    data-product-id="<?php echo esc_attr($product_id); ?>"
                                                    value="<?php echo esc_attr($minimum_order); ?>" 
                                                    step="1" 
-                                                   min="1"
+                                                   min="0"
                                                    placeholder="Ej: 10" />
                                             <span class="wfx-unit-label">unidades</span>
                                         </div>
@@ -490,7 +490,8 @@ class WFX_Wholesale_Admin {
         check_ajax_referer('wfx_wholesale_nonce', 'nonce');
         
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Permisos insuficientes');
+            wp_send_json_error(array('message' => 'Permisos insuficientes'));
+            return;
         }
         
         $product_id = isset($_POST['product_id']) ? intval($_POST['product_id']) : 0;
@@ -498,9 +499,9 @@ class WFX_Wholesale_Admin {
         
         if ($product_id && is_numeric($price)) {
             update_post_meta($product_id, '_wfx_wholesale_price', $price);
-            wp_send_json_success('Precio actualizado');
+            wp_send_json_success(array('message' => 'Precio actualizado'));
         } else {
-            wp_send_json_error('Datos inválidos');
+            wp_send_json_error(array('message' => 'Datos inválidos'));
         }
     }
     
@@ -518,15 +519,23 @@ class WFX_Wholesale_Admin {
         $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
         $minimum_order = isset($_POST['minimum_order']) ? absint($_POST['minimum_order']) : 0;
         
-        if ($product_id > 0) {
-            update_post_meta($product_id, '_wfx_minimum_order', $minimum_order);
-            wp_send_json_success(array(
-                'message' => 'Compra mínima actualizada',
-                'product_id' => $product_id,
-                'minimum_order' => $minimum_order
-            ));
-        } else {
+        // Validar que el ID de producto sea válido
+        if ($product_id <= 0) {
             wp_send_json_error(array('message' => 'ID de producto inválido'));
+            return;
         }
+        
+        // Validar que la cantidad mínima sea al menos 1 (o permitir 0 para "sin mínimo")
+        if ($minimum_order < 0) {
+            wp_send_json_error(array('message' => 'La cantidad mínima no puede ser negativa'));
+            return;
+        }
+        
+        update_post_meta($product_id, '_wfx_minimum_order', $minimum_order);
+        wp_send_json_success(array(
+            'message' => 'Compra mínima actualizada',
+            'product_id' => $product_id,
+            'minimum_order' => $minimum_order
+        ));
     }
 }

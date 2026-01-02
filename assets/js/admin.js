@@ -76,7 +76,7 @@
             const minimumOrder = $input.val();
             
             // Indicador visual de guardando
-            $input.css('border-color', '#f0ad4e');
+            $input.removeClass('saved error').addClass('saving');
             
             $.ajax({
                 url: wfxWholesale.ajax_url,
@@ -90,18 +90,18 @@
                 success: function(response) {
                     if (response.success) {
                         // Indicador de éxito
-                        $input.css('border-color', '#28a745');
+                        $input.removeClass('saving error').addClass('saved');
                         setTimeout(function() {
-                            $input.css('border-color', '');
+                            $input.removeClass('saved');
                         }, 1500);
                     } else {
                         // Indicador de error
-                        $input.css('border-color', '#dc3545');
+                        $input.removeClass('saving saved').addClass('error');
                         console.error('Error al guardar:', response.data.message);
                     }
                 },
                 error: function(xhr, status, error) {
-                    $input.css('border-color', '#dc3545');
+                    $input.removeClass('saving saved').addClass('error');
                     console.error('Error AJAX:', error);
                 }
             });
