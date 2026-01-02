@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,14 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 4. Meta box en productos individuales
 
 == Changelog ==
+
+= 1.1.4 - 2026-01-02 =
+* Fixed: Imágenes ajustadas proporcionalmente sin distorsión
+* Fixed: Imágenes centradas en contenedor
+* Improved: Altura dinámica de cajas de producto
+* Added: Placeholder cuando falta imagen
+* Improved: Manejo de errores de imágenes
+* Improved: Validación MIME type para seguridad
 
 = 1.1.3 - 2026-01-02 =
 * Changed: Stock reemplazado por Compra Mínima en catálogos PDF

@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.1.3-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.4-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -163,6 +163,18 @@ _(Las capturas se añadirán en futuras versiones)_
 
 ## 🔄 Changelog
 
+### Version 1.1.4 (2026-01-02)
+🔧 **Correcciones:**
+- Fixed: Imágenes ahora se ajustan proporcionalmente dentro de su contenedor
+- Fixed: Imágenes verticales y horizontales se renderizan correctamente
+- Improved: Altura de caja de producto ahora es dinámica según contenido
+- Added: Placeholder visual cuando falta imagen del producto
+- Improved: Centrado automático de imágenes en contenedor de 60x60mm
+- Fixed: Prevención de distorsión de imágenes
+- Improved: Mejor manejo de errores al cargar imágenes
+- Added: Método draw_image_placeholder() para consistencia visual
+- Improved: Validación MIME type en get_image_path() para seguridad
+
 ### Version 1.1.3 (2026-01-02)
 🔧 **Mejoras Funcionales:**
 - Changed: "Stock" reemplazado por "Compra Mínima" en PDF
@@ -289,7 +301,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 **Desarrollado por**: WFX Telematics  
 **Autor**: WFX Telematics  
-**Versión**: 1.1.2  
+**Versión**: 1.1.4  
 **Última actualización**: 2026-01-02
 
 ## 🙏 Agradecimientos
