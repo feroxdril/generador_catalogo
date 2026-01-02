@@ -285,36 +285,30 @@ class WFX_PDF_Generator {
                 $pdf->SetFont('helvetica', '', 9);
                 $pdf->SetTextColor(73, 80, 87);
                 $clean_desc = $this->clean_text(wp_strip_all_tags($description));
-                $full_length = strlen($clean_desc);
-                $clean_desc = substr($clean_desc, 0, 350);
-                if ($full_length > 350) {
-                    $clean_desc .= '...';
-                }
+                
+                // Usar smart_truncate para corte inteligente
+                $clean_desc = $this->smart_truncate($clean_desc, 400);
+                
                 $pdf->SetXY($content_x, $current_y);
                 $pdf->MultiCell($content_width, 4, $clean_desc, 0, 'L', false, 1);
                 $current_y = $pdf->GetY() + 2;
             }
         }
         
-        // Stock (más visible)
-        if (!empty($options['include_stock'])) {
-            $pdf->SetFont('helvetica', 'B', 9);
-            $pdf->SetXY($content_x, $current_y);
-            
-            if ($product->is_in_stock()) {
-                $stock_qty = $product->get_stock_quantity();
-                $stock_text = '✓ En stock';
-                if ($stock_qty !== null) {
-                    $stock_text .= ': ' . $stock_qty . ' unidades';
-                }
-                $pdf->SetTextColor(40, 167, 69);
-            } else {
-                $stock_text = '✗ Agotado';
-                $pdf->SetTextColor(220, 53, 69);
-            }
-            $pdf->Cell($content_width, 5, $stock_text, 0, 1, 'L');
-            $current_y = $pdf->GetY();
+        // Compra mínima (reemplaza a stock)
+        $minimum_order = get_post_meta($product_id, '_wfx_minimum_order', true);
+        
+        // Si no está definido, usar valor por defecto de configuración
+        if (empty($minimum_order) || !is_numeric($minimum_order)) {
+            $settings = get_option('wfx_wholesale_settings', array());
+            $minimum_order = isset($settings['default_minimum_order']) ? $settings['default_minimum_order'] : 5;
         }
+        
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetXY($content_x, $current_y);
+        $pdf->SetTextColor(13, 110, 253); // Azul
+        $pdf->Cell($content_width, 5, $this->decode_utf8('🛒 Compra mínima: ' . $minimum_order . ' unidades'), 0, 1, 'L');
+        $current_y = $pdf->GetY() + 2;
         
         // PRECIO MAYORISTA (destacado a la derecha con diseño mejorado)
         $wholesale_price = get_post_meta($product_id, '_wfx_wholesale_price', true);
@@ -492,6 +486,48 @@ class WFX_PDF_Generator {
         // Remover caracteres especiales problemáticos
         $text = preg_replace('/[^\p{L}\p{N}\s\.\,\-\(\)\:\;\¿\?\¡\!]/u', '', $text);
         return trim($text);
+    }
+    
+    /**
+     * Cortar texto inteligentemente en punto, coma o espacio
+     */
+    private function smart_truncate($text, $max_length = 400) {
+        // Si el texto es más corto que el límite, retornarlo completo
+        if (strlen($text) <= $max_length) {
+            return $text;
+        }
+        
+        // Obtener substring hasta el límite
+        $truncated = substr($text, 0, $max_length);
+        
+        // Buscar último punto dentro del límite
+        $last_period = strrpos($truncated, '.');
+        if ($last_period !== false && $last_period > ($max_length * 0.5)) {
+            // Si encontramos un punto y está al menos a mitad del texto
+            return substr($text, 0, $last_period + 1);
+        }
+        
+        // Si no hay punto, buscar última coma
+        $last_comma = strrpos($truncated, ',');
+        if ($last_comma !== false && $last_comma > ($max_length * 0.5)) {
+            return substr($text, 0, $last_comma + 1) . '...';
+        }
+        
+        // Si no hay coma, buscar último espacio
+        $last_space = strrpos($truncated, ' ');
+        if ($last_space !== false) {
+            return substr($text, 0, $last_space) . '...';
+        }
+        
+        // Si todo falla, cortar en el límite
+        return $truncated . '...';
+    }
+    
+    /**
+     * Decodificar UTF-8 para mostrar emojis correctamente en PDF
+     */
+    private function decode_utf8($text) {
+        return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
     
     /**

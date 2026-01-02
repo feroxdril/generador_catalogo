@@ -48,6 +48,7 @@ class WFX_Wholesale_Product_Meta {
         // Obtener valores guardados
         $in_catalog = get_post_meta($post->ID, '_wfx_in_wholesale_catalog', true);
         $wholesale_price = get_post_meta($post->ID, '_wfx_wholesale_price', true);
+        $minimum_order = get_post_meta($post->ID, '_wfx_minimum_order', true);
         
         ?>
         <div class="wfx-product-meta">
@@ -74,6 +75,21 @@ class WFX_Wholesale_Product_Meta {
                        placeholder="0.00"
                        style="width: 100%;" />
                 <small>Precio especial para el catálogo mayorista</small>
+            </p>
+            
+            <p>
+                <label for="wfx_minimum_order">
+                    <strong>Compra Mínima:</strong>
+                </label>
+                <input type="number" 
+                       id="wfx_minimum_order"
+                       name="wfx_minimum_order" 
+                       value="<?php echo esc_attr($minimum_order); ?>"
+                       step="1"
+                       min="1"
+                       placeholder="Ej: 10"
+                       style="width: 100%;" />
+                <small>Cantidad mínima de unidades para compra mayorista</small>
             </p>
         </div>
         
@@ -129,6 +145,12 @@ class WFX_Wholesale_Product_Meta {
             $wholesale_price = sanitize_text_field($_POST['wfx_wholesale_price']);
             $wholesale_price = floatval($wholesale_price);
             update_post_meta($post_id, '_wfx_wholesale_price', $wholesale_price);
+        }
+        
+        // Guardar compra mínima
+        if (isset($_POST['wfx_minimum_order'])) {
+            $minimum_order = absint($_POST['wfx_minimum_order']);
+            update_post_meta($post_id, '_wfx_minimum_order', $minimum_order);
         }
     }
 }

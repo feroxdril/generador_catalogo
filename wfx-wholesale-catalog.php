@@ -3,7 +3,7 @@
  * Plugin Name: WFX Wholesale Catalog Generator
  * Plugin URI: https://www.wifextelematics.com
  * Description: Genera catálogos PDF de productos mayoristas seleccionados desde WooCommerce
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: WFX Telematics
  * Author URI: https://www.wifextelematics.com
  * Requires at least: 5.8
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WFX_WHOLESALE_VERSION', '1.1.2');
+define('WFX_WHOLESALE_VERSION', '1.1.3');
 define('WFX_WHOLESALE_PATH', plugin_dir_path(__FILE__));
 define('WFX_WHOLESALE_URL', plugin_dir_url(__FILE__));
 
@@ -85,7 +85,8 @@ function wfx_wholesale_activate() {
         'contact_phone' => '',
         'catalog_title' => 'Catálogo Mayorista',
         'show_sku' => 'yes',
-        'show_stock' => 'yes',
+        'show_minimum_order' => 'yes',
+        'default_minimum_order' => 5,
         'currency_symbol' => get_woocommerce_currency_symbol(),
     );
     

@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,15 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 4. Meta box en productos individuales
 
 == Changelog ==
+
+= 1.1.3 - 2026-01-02 =
+* Changed: Stock reemplazado por Compra Mínima en catálogos PDF
+* Added: Campo de Compra Mínima en editor de productos
+* Added: Configuración de compra mínima por defecto
+* Improved: Corte inteligente de descripciones en puntos completos
+* Fixed: Descripciones cortadas en mitad de palabra
+* Improved: Soporte UTF-8 para emojis en PDF
+* Added: Emoji 🛒 para indicador de compra mínima
 
 = 1.1.2 - 2026-01-02 =
 * Improved: Tamaño de imágenes de productos aumentado (60mm)

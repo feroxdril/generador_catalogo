@@ -195,7 +195,8 @@ class WFX_Wholesale_Admin {
             'contact_phone' => '',
             'catalog_title' => 'Catálogo Mayorista',
             'show_sku' => 'yes',
-            'show_stock' => 'yes',
+            'show_minimum_order' => 'yes',
+            'default_minimum_order' => 5,
             'currency_symbol' => get_woocommerce_currency_symbol(),
         );
         $settings = wp_parse_args($settings, $defaults);
@@ -282,13 +283,28 @@ class WFX_Wholesale_Admin {
                     </tr>
                     
                     <tr>
-                        <th><label for="show_stock">Mostrar Stock</label></th>
+                        <th><label for="show_minimum_order">Mostrar Compra Mínima</label></th>
                         <td>
                             <input type="checkbox" 
-                                   id="show_stock" 
-                                   name="show_stock" 
+                                   id="show_minimum_order" 
+                                   name="show_minimum_order" 
                                    value="yes"
-                                   <?php checked($settings['show_stock'], 'yes'); ?> />
+                                   <?php checked($settings['show_minimum_order'], 'yes'); ?> />
+                            <p class="description">Muestra la cantidad mínima de compra en el catálogo</p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th><label for="default_minimum_order">Compra Mínima por Defecto</label></th>
+                        <td>
+                            <input type="number" 
+                                   id="default_minimum_order" 
+                                   name="default_minimum_order" 
+                                   value="<?php echo esc_attr($settings['default_minimum_order']); ?>" 
+                                   class="small-text"
+                                   step="1"
+                                   min="1" />
+                            <p class="description">Cantidad mínima de unidades cuando no está especificada en el producto</p>
                         </td>
                     </tr>
                     
@@ -410,7 +426,8 @@ class WFX_Wholesale_Admin {
             'contact_email' => isset($_POST['contact_email']) ? sanitize_email($_POST['contact_email']) : '',
             'contact_phone' => isset($_POST['contact_phone']) ? sanitize_text_field($_POST['contact_phone']) : '',
             'show_sku' => isset($_POST['show_sku']) ? 'yes' : 'no',
-            'show_stock' => isset($_POST['show_stock']) ? 'yes' : 'no',
+            'show_minimum_order' => isset($_POST['show_minimum_order']) ? 'yes' : 'no',
+            'default_minimum_order' => isset($_POST['default_minimum_order']) ? absint($_POST['default_minimum_order']) : 5,
             'currency_symbol' => isset($_POST['currency_symbol']) ? sanitize_text_field($_POST['currency_symbol']) : '',
         );
         
