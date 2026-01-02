@@ -107,7 +107,9 @@ class WFX_Wholesale_Admin {
                             $is_checked = in_array($product_id, $saved_selection);
                             $wholesale_price = isset($saved_prices[$product_id]) ? $saved_prices[$product_id] : '';
                             $minimum_order = get_post_meta($product_id, '_wfx_minimum_order', true);
-                            if (empty($minimum_order)) {
+                            // Only use default if meta doesn't exist (returns false) or is empty string
+                            // This allows 0 to be a valid value (no minimum requirement)
+                            if ($minimum_order === false || $minimum_order === '') {
                                 $settings = get_option('wfx_wholesale_settings', array());
                                 $minimum_order = isset($settings['default_minimum_order']) ? $settings['default_minimum_order'] : '';
                             }
@@ -525,7 +527,8 @@ class WFX_Wholesale_Admin {
             return;
         }
         
-        // Validar que la cantidad mínima sea al menos 1 (o permitir 0 para "sin mínimo")
+        // Validar que la cantidad mínima no sea negativa
+        // Nota: 0 es un valor válido que indica "sin mínimo requerido"
         if ($minimum_order < 0) {
             wp_send_json_error(array('message' => 'La cantidad mínima no puede ser negativa'));
             return;
