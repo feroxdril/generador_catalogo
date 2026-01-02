@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,18 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 4. Meta box en productos individuales
 
 == Changelog ==
+
+= 1.1.2 - 2026-01-02 =
+* Improved: Tamaño de imágenes de productos aumentado (60mm)
+* Fixed: Símbolo de moneda corregido en precios
+* Improved: Descripciones más largas (350 caracteres)
+* Improved: Diseño profesional con cajas y colores
+* Improved: Precio mayorista destacado en caja azul
+* Improved: Precio regular tachado cuando difiere
+* Improved: SKU en formato badge
+* Improved: Stock con iconos visuales
+* Improved: Header y footer rediseñados
+* Improved: Mejor manejo de HTML entities
 
 = 1.1.1 - 2026-01-02 =
 * Fixed: Corregida detección y carga de TCPDF

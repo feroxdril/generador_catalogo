@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.1.1-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.2-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -163,6 +163,21 @@ _(Las capturas se añadirán en futuras versiones)_
 
 ## 🔄 Changelog
 
+### Version 1.1.2 (2026-01-02)
+🎨 **Mejoras de Diseño del PDF:**
+- Improved: Imágenes de productos aumentadas de 35mm a 60mm
+- Fixed: Símbolo de moneda corregido ($ en lugar de &#36)
+- Improved: Descripciones extendidas hasta 350 caracteres
+- Improved: Layout con cajas de fondo para cada producto
+- Improved: Precio mayorista en caja azul destacada
+- Improved: Mostrar precio regular tachado si es diferente
+- Improved: SKU en formato badge/etiqueta
+- Improved: Stock más visible con iconos ✓/✗
+- Improved: Header y footer rediseñados profesionalmente
+- Improved: Mejor limpieza de HTML entities
+- Improved: Espaciado optimizado entre productos
+- Improved: Soporte para múltiples monedas (USD, EUR, COP, MXN, etc.)
+
 ### Version 1.1.1 (2026-01-02)
 🔧 **Correcciones Críticas:**
 - Fixed: Corregida detección de TCPDF en `/lib/tcpdf/`
@@ -262,7 +277,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 **Desarrollado por**: WFX Telematics  
 **Autor**: WFX Telematics  
-**Versión**: 1.1.1  
+**Versión**: 1.1.2  
 **Última actualización**: 2026-01-02
 
 ## 🙏 Agradecimientos
