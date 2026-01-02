@@ -138,34 +138,40 @@ class WFX_PDF_Generator {
      * Agregar header al PDF
      */
     private function add_header($pdf, $settings) {
-        // Logo si existe
+        $pdf->SetY(15);
+        
+        // Logo si existe (más grande)
         if (!empty($settings['company_logo'])) {
             $logo_path = $this->get_image_path($settings['company_logo']);
             if ($logo_path && file_exists($logo_path)) {
                 try {
-                    $pdf->Image($logo_path, 15, 15, 50, 0, '', '', '', false, 300, '', false, false, 0);
+                    $pdf->Image($logo_path, 15, 15, 60, 0, '', '', '', false, 300, '', false, false, 0);
                 } catch (Exception $e) {
                     error_log('WFX Wholesale: Logo error: ' . $e->getMessage());
                 }
             }
         }
         
-        // Título
-        $pdf->SetY(25);
-        $pdf->SetFont('helvetica', 'B', 22);
-        $pdf->SetTextColor(33, 37, 41);
-        $pdf->Cell(0, 10, $settings['catalog_title'] ?? 'Catálogo Mayorista', 0, 1, 'C');
+        // Título (lado derecho)
+        $pdf->SetXY(100, 20);
+        $pdf->SetFont('helvetica', 'B', 24);
+        $pdf->SetTextColor(13, 110, 253);
+        $pdf->Cell(0, 10, $settings['catalog_title'] ?? 'Catálogo Mayorista', 0, 1, 'R');
         
         // Fecha
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetXY(100, 30);
+        $pdf->SetFont('helvetica', '', 11);
         $pdf->SetTextColor(108, 117, 125);
-        $pdf->Cell(0, 6, date('d/m/Y'), 0, 1, 'C');
+        $pdf->Cell(0, 6, date('d/m/Y'), 0, 1, 'R');
         
-        // Línea separadora
-        $pdf->SetY($pdf->GetY() + 5);
-        $pdf->SetDrawColor(200, 200, 200);
+        // Línea separadora más gruesa
+        $pdf->SetY(45);
+        $pdf->SetDrawColor(13, 110, 253);
+        $pdf->SetLineWidth(0.8);
         $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
-        $pdf->SetY($pdf->GetY() + 8);
+        $pdf->SetLineWidth(0.2);
+        
+        $pdf->SetY(52);
     }
     
     /**
@@ -200,10 +206,27 @@ class WFX_PDF_Generator {
         $product_id = $product->get_id();
         $y_start = $pdf->GetY();
         $x_margin = 15;
+        $page_width = 180; // Ancho útil de la página
         
-        // Imagen del producto
-        $image_x = $x_margin;
-        $image_width = 35;
+        // Verificar si hay espacio suficiente (al menos 70mm)
+        if ($y_start > 220) {
+            $pdf->AddPage();
+            $y_start = $pdf->GetY();
+        }
+        
+        // Dibujar caja de fondo para el producto
+        $pdf->SetFillColor(248, 249, 250);
+        $pdf->SetDrawColor(222, 226, 230);
+        $box_height = 65; // Altura estimada de la caja
+        $pdf->Rect($x_margin, $y_start, $page_width, $box_height, 'DF');
+        
+        // Espaciado interno
+        $padding = 5;
+        $y_start += $padding;
+        
+        // Imagen del producto (más grande)
+        $image_x = $x_margin + $padding;
+        $image_width = 60; // Aumentado de 35 a 60
         
         if (!empty($options['include_images'])) {
             $image_id = $product->get_image_id();
@@ -211,32 +234,44 @@ class WFX_PDF_Generator {
                 $image_path = $this->get_image_path(wp_get_attachment_url($image_id));
                 if ($image_path && file_exists($image_path)) {
                     try {
-                        $pdf->Image($image_path, $image_x, $y_start, $image_width, 0, '', '', '', false, 300, '', false, false, 0);
+                        // Dibujar borde para la imagen
+                        $pdf->SetDrawColor(200, 200, 200);
+                        $pdf->Rect($image_x, $y_start, $image_width, $image_width, 'D');
+                        $pdf->Image($image_path, $image_x + 2, $y_start + 2, $image_width - 4, 0, '', '', '', false, 300, '', false, false, 0);
                     } catch (Exception $e) {
                         error_log('WFX Wholesale: Product image error: ' . $e->getMessage());
                     }
                 }
+            } else {
+                // Placeholder si no hay imagen
+                $pdf->SetFont('helvetica', 'I', 8);
+                $pdf->SetTextColor(150, 150, 150);
+                $pdf->SetXY($image_x, $y_start + 25);
+                $pdf->Cell($image_width, 10, 'Sin imagen', 0, 0, 'C');
             }
         }
         
         // Contenido del producto
-        $content_x = $image_x + $image_width + 5;
-        $content_width = 140;
-        $pdf->SetX($content_x);
+        $content_x = $image_x + $image_width + 8;
+        $content_width = 80;
         
-        // Nombre del producto
-        $pdf->SetFont('helvetica', 'B', 12);
+        // Nombre del producto (más grande y destacado)
+        $pdf->SetFont('helvetica', 'B', 13);
         $pdf->SetTextColor(33, 37, 41);
-        $pdf->MultiCell($content_width, 6, $this->clean_text($product->get_name()), 0, 'L', false, 1, $content_x, $y_start);
+        $pdf->SetXY($content_x, $y_start);
+        $pdf->MultiCell($content_width, 6, $this->clean_text($product->get_name()), 0, 'L', false, 1);
         
-        $current_y = $pdf->GetY();
+        $current_y = $pdf->GetY() + 2;
         
-        // SKU
+        // SKU (estilo badge)
         if (!empty($options['include_sku']) && $product->get_sku()) {
-            $pdf->SetFont('helvetica', '', 9);
-            $pdf->SetTextColor(108, 117, 125);
-            $pdf->Cell($content_width, 5, 'SKU: ' . $product->get_sku(), 0, 1, 'L');
-            $current_y = $pdf->GetY();
+            $pdf->SetFont('helvetica', 'B', 8);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetFillColor(108, 117, 125);
+            $pdf->SetXY($content_x, $current_y);
+            $sku_text = ' SKU: ' . $product->get_sku() . ' ';
+            $pdf->Cell($pdf->GetStringWidth($sku_text) + 2, 5, $sku_text, 0, 0, 'L', true);
+            $current_y += 7;
         }
         
         // Descripción
@@ -247,85 +282,127 @@ class WFX_PDF_Generator {
             }
             
             if (!empty($description)) {
-                $pdf->SetFont('helvetica', '', 8);
+                $pdf->SetFont('helvetica', '', 9);
                 $pdf->SetTextColor(73, 80, 87);
                 $clean_desc = $this->clean_text(wp_strip_all_tags($description));
-                $clean_desc = substr($clean_desc, 0, 200);
-                if (strlen($description) > 200) {
+                $full_length = strlen($clean_desc);
+                $clean_desc = substr($clean_desc, 0, 350);
+                if (strlen($clean_desc) < $full_length) {
                     $clean_desc .= '...';
                 }
+                $pdf->SetXY($content_x, $current_y);
                 $pdf->MultiCell($content_width, 4, $clean_desc, 0, 'L', false, 1);
-                $current_y = $pdf->GetY();
+                $current_y = $pdf->GetY() + 2;
             }
         }
         
-        // Stock
+        // Stock (más visible)
         if (!empty($options['include_stock'])) {
-            $pdf->SetFont('helvetica', '', 8);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->SetXY($content_x, $current_y);
+            
             if ($product->is_in_stock()) {
                 $stock_qty = $product->get_stock_quantity();
-                $stock_text = 'En stock';
+                $stock_text = '✓ En stock';
                 if ($stock_qty !== null) {
                     $stock_text .= ': ' . $stock_qty . ' unidades';
                 }
                 $pdf->SetTextColor(40, 167, 69);
             } else {
-                $stock_text = 'Agotado';
+                $stock_text = '✗ Agotado';
                 $pdf->SetTextColor(220, 53, 69);
             }
             $pdf->Cell($content_width, 5, $stock_text, 0, 1, 'L');
             $current_y = $pdf->GetY();
         }
         
-        // Precio mayorista (destacado a la derecha)
+        // PRECIO MAYORISTA (destacado a la derecha con diseño mejorado)
         $wholesale_price = get_post_meta($product_id, '_wfx_wholesale_price', true);
+        $regular_price = $product->get_regular_price();
+        
         if (empty($wholesale_price)) {
-            $wholesale_price = $product->get_regular_price();
+            $wholesale_price = $regular_price;
         }
         
         if (!empty($wholesale_price) && is_numeric($wholesale_price)) {
             $price_x = $content_x + $content_width + 5;
-            $pdf->SetXY($price_x, $y_start + 5);
-            $pdf->SetFont('helvetica', 'B', 16);
-            $pdf->SetTextColor(13, 110, 253);
+            $price_width = 30;
             
-            $currency = get_woocommerce_currency_symbol();
+            // Caja para el precio
+            $pdf->SetFillColor(13, 110, 253);
+            $pdf->Rect($price_x, $y_start, $price_width, 20, 'F');
+            
+            // Etiqueta "PRECIO MAYORISTA"
+            $pdf->SetFont('helvetica', 'B', 6);
+            $pdf->SetTextColor(255, 255, 255);
+            $pdf->SetXY($price_x, $y_start + 2);
+            $pdf->Cell($price_width, 3, 'PRECIO MAYORISTA', 0, 1, 'C');
+            
+            // Precio
+            $pdf->SetFont('helvetica', 'B', 16);
+            $pdf->SetTextColor(255, 255, 255);
+            
+            $currency = $this->get_currency_symbol();
             $price_formatted = $currency . ' ' . number_format((float)$wholesale_price, 0, ',', '.');
             
-            $pdf->Cell(30, 10, $price_formatted, 0, 0, 'R');
+            $pdf->SetXY($price_x, $y_start + 7);
+            $pdf->Cell($price_width, 10, $price_formatted, 0, 0, 'C');
+            
+            // Mostrar precio regular tachado si es diferente
+            if (!empty($regular_price) && $regular_price != $wholesale_price && is_numeric($regular_price)) {
+                $pdf->SetFont('helvetica', '', 8);
+                $pdf->SetTextColor(100, 100, 100);
+                $regular_formatted = $currency . ' ' . number_format((float)$regular_price, 0, ',', '.');
+                $pdf->SetXY($price_x, $y_start + 22);
+                
+                // Texto tachado
+                $text_width = $pdf->GetStringWidth($regular_formatted);
+                $text_x = $price_x + ($price_width - $text_width) / 2;
+                $pdf->Cell($price_width, 4, $regular_formatted, 0, 0, 'C');
+                $pdf->Line($text_x, $y_start + 24, $text_x + $text_width, $y_start + 24);
+            }
         }
         
-        // Calcular altura máxima usada
-        $row_height = max($current_y - $y_start, $image_width + 5);
-        $pdf->SetY($y_start + $row_height + 3);
-        
-        // Línea separadora
-        $pdf->SetDrawColor(233, 236, 239);
-        $pdf->Line($x_margin, $pdf->GetY(), 195, $pdf->GetY());
-        $pdf->SetY($pdf->GetY() + 5);
+        // Ajustar posición Y para siguiente producto
+        $row_height = max($box_height, $image_width + $padding * 2);
+        $pdf->SetY($y_start + $row_height + 5);
     }
     
     /**
      * Agregar footer al PDF
      */
     private function add_footer($pdf, $settings) {
-        $pdf->SetY(-20);
-        $pdf->SetFont('helvetica', '', 8);
-        $pdf->SetTextColor(108, 117, 125);
+        $pdf->SetY(-25);
+        
+        // Línea superior
+        $pdf->SetDrawColor(13, 110, 253);
+        $pdf->SetLineWidth(0.5);
+        $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+        $pdf->SetY($pdf->GetY() + 3);
+        
+        // Información de contacto
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetTextColor(33, 37, 41);
         
         $contact_info = array();
         if (!empty($settings['contact_email'])) {
-            $contact_info[] = 'Email: ' . $settings['contact_email'];
+            $contact_info[] = '📧 ' . $settings['contact_email'];
         }
         if (!empty($settings['contact_phone'])) {
-            $contact_info[] = 'Tel: ' . $settings['contact_phone'];
+            $contact_info[] = '📱 ' . $settings['contact_phone'];
         }
         
         if (!empty($contact_info)) {
-            $pdf->Cell(0, 4, implode(' | ', $contact_info), 0, 1, 'C');
+            $pdf->Cell(0, 5, implode('  |  ', $contact_info), 0, 1, 'C');
         }
         
+        // Website
+        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetTextColor(13, 110, 253);
         $pdf->Cell(0, 4, site_url(), 0, 1, 'C');
+        
+        // Número de página
+        $pdf->SetTextColor(108, 117, 125);
         $pdf->Cell(0, 4, 'Página ' . $pdf->getAliasNumPage() . ' de ' . $pdf->getAliasNbPages(), 0, 0, 'C');
     }
     
@@ -406,9 +483,41 @@ class WFX_PDF_Generator {
      * Limpiar texto para PDF
      */
     private function clean_text($text) {
+        // Primero decodificar todas las HTML entities
         $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $text = strip_tags($text);
+        // Remover tags HTML
+        $text = wp_strip_all_tags($text);
+        // Limpiar espacios múltiples
         $text = preg_replace('/\s+/', ' ', $text);
+        // Remover caracteres especiales problemáticos
+        $text = preg_replace('/[^\p{L}\p{N}\s\.\,\-\(\)\:\;\¿\?\¡\!]/u', '', $text);
         return trim($text);
+    }
+    
+    /**
+     * Obtener símbolo de moneda sin HTML entities
+     */
+    private function get_currency_symbol() {
+        $currency = get_woocommerce_currency();
+        
+        $symbols = array(
+            'USD' => '$',
+            'EUR' => '€',
+            'GBP' => '£',
+            'JPY' => '¥',
+            'COP' => '$',
+            'MXN' => '$',
+            'ARS' => '$',
+            'CLP' => '$',
+            'PEN' => 'S/',
+            'BRL' => 'R$',
+            'CAD' => 'CA$',
+            'AUD' => 'A$',
+            'CHF' => 'CHF',
+            'CNY' => '¥',
+            'INR' => '₹',
+        );
+        
+        return isset($symbols[$currency]) ? $symbols[$currency] : $currency;
     }
 }
