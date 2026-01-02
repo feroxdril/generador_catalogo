@@ -134,16 +134,14 @@
                 return;
             }
             
-            // Recopilar precios mayoristas
-            var prices = {};
-            $('.wfx-wholesale-price-input').each(function() {
-                var input = $(this);
-                var productId = input.attr('name').match(/\[(\d+)\]/)[1];
-                var price = input.val();
-                if (price && price > 0) {
-                    prices[productId] = price;
-                }
-            });
+            // Opciones de generación
+            var options = {
+                include_images: true,
+                include_descriptions: true,
+                include_sku: true,
+                include_stock: false,
+                sort_by: 'name'
+            };
             
             // Mostrar loading overlay
             $('#wfx-loading-overlay').fadeIn();
@@ -157,25 +155,30 @@
                     action: 'wfx_generate_catalog',
                     nonce: wfxWholesale.nonce,
                     product_ids: selectedProducts,
-                    prices: prices
+                    options: options
                 },
                 success: function(response) {
                     $('#wfx-loading-overlay').fadeOut();
                     
                     if (response.success) {
-                        showMessage('Catálogo generado exitosamente', 'success');
-                        
-                        // Abrir PDF en nueva ventana
+                        // Abrir PDF en nueva pestaña
                         if (response.data.pdf_url) {
                             window.open(response.data.pdf_url, '_blank');
                         }
+                        
+                        // Mostrar mensaje de éxito
+                        showMessage('¡PDF generado correctamente! Productos incluidos: ' + response.data.products_count, 'success');
                     } else {
-                        showMessage('Error: ' + response.data.message, 'error');
+                        showMessage('Error al generar el PDF: ' + response.data, 'error');
                     }
                 },
                 error: function(xhr, status, error) {
                     $('#wfx-loading-overlay').fadeOut();
-                    showMessage('Error de conexión al generar el catálogo: ' + error, 'error');
+                    
+                    console.error('AJAX Error:', error);
+                    console.error('Response:', xhr.responseText);
+                    
+                    showMessage('Error de conexión al generar el catálogo. Por favor revisa la consola del navegador para más detalles.', 'error');
                 },
                 complete: function() {
                     button.prop('disabled', false);

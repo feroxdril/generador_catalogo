@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,15 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 4. Meta box en productos individuales
 
 == Changelog ==
+
+= 1.1.1 - 2026-01-02 =
+* Fixed: Corregida detección y carga de TCPDF
+* Fixed: Error "TCPDF no está disponible" resuelto
+* Fixed: Validación de permisos de carpeta
+* Improved: Mejor manejo de errores con mensajes descriptivos
+* Improved: Logs de debug para troubleshooting
+* Improved: Validación de imágenes y productos
+* Improved: Formateo de precios mejorado
 
 = 1.1.0 - 2025-12-29 =
 * Added: Compatibilidad con WooCommerce HPOS (High-Performance Order Storage)
