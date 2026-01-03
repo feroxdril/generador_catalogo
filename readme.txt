@@ -4,7 +4,7 @@ Tags: woocommerce, pdf, catalog, wholesale, products
 Requires at least: 5.8
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.5
+Stable tag: 1.1.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,14 @@ Sí, el PDF se genera y se abre automáticamente. Puedes descargarlo y compartir
 4. Meta box en productos individuales
 
 == Changelog ==
+
+= 1.1.6 - 2026-01-03 =
+* Fixed: Error al generar PDF con más de 7 productos
+* Added: Optimización automática de imágenes
+* Improved: Límites de memoria y tiempo de ejecución
+* Fixed: Mixed Content (HTTP/HTTPS)
+* Improved: Ajuste perfecto de imágenes en PDF
+* Added: Paginación automática
 
 = 1.1.5 - 2026-01-02 =
 * Fixed: Eliminado emoji que causaba "?" en PDF
