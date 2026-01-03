@@ -47,6 +47,19 @@ class WFX_PDF_Generator {
      * Generar PDF del catálogo
      */
     public function generate($product_ids, $options = array()) {
+        // Aumentar límites de PHP
+        @ini_set('memory_limit', '256M');
+        @ini_set('max_execution_time', 300);
+        @ini_set('max_input_time', 300);
+        
+        // Limpiar cualquier output previo
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // Iniciar nuevo buffer limpio
+        ob_start();
+        
         // Validar que TCPDF esté disponible
         if (!$this->is_tcpdf_available()) {
             error_log('WFX Wholesale: Cannot generate PDF - TCPDF not available');
@@ -60,6 +73,7 @@ class WFX_PDF_Generator {
         }
         
         try {
+            error_log('WFX Wholesale: Starting PDF generation for ' . count($product_ids) . ' products');
             $settings = get_option('wfx_wholesale_settings', array());
             
             // Crear instancia de TCPDF
@@ -114,6 +128,9 @@ class WFX_PDF_Generator {
             $filename = 'catalogo-' . date('Y-m-d-His') . '-' . wp_generate_password(6, false, false) . '.pdf';
             $filepath = $pdf_dir . $filename;
             
+            // Limpiar buffer antes de generar
+            ob_end_clean();
+            
             // Guardar PDF
             $pdf->Output($filepath, 'F');
             
@@ -128,8 +145,7 @@ class WFX_PDF_Generator {
             return $upload_dir['baseurl'] . '/wfx-catalogs/' . $filename;
             
         } catch (Exception $e) {
-            error_log('WFX Wholesale PDF Error: ' . $e->getMessage());
-            error_log('WFX Wholesale PDF Stack: ' . $e->getTraceAsString());
+            error_log('WFX Wholesale: PDF generation error: ' . $e->getMessage());
             return false;
         }
     }
@@ -189,13 +205,30 @@ class WFX_PDF_Generator {
         
         $pdf->SetTextColor(0, 0, 0);
         
+        $products_per_page = 10; // Máximo 10 productos por página
+        $product_count = 0;
+        
         foreach ($products as $index => $product) {
+            // Salto de página cada 10 productos
+            if ($product_count > 0 && $product_count % $products_per_page === 0) {
+                $pdf->AddPage();
+                $this->add_header($pdf, get_option('wfx_wholesale_settings', array()));
+            }
+            
             // Verificar si hay espacio para el producto
             if ($pdf->GetY() > 250) {
                 $pdf->AddPage();
             }
             
             $this->add_product_row($pdf, $product, $options);
+            $product_count++;
+            
+            // Liberar memoria después de cada 5 productos
+            if ($product_count % 5 === 0) {
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+            }
         }
     }
     
@@ -234,32 +267,26 @@ class WFX_PDF_Generator {
         if (!empty($options['include_images'])) {
             $image_id = $product->get_image_id();
             if ($image_id) {
-                $image_path = $this->get_image_path(wp_get_attachment_url($image_id));
+                $image_url = wp_get_attachment_url($image_id);
+                $image_path = $this->get_image_path($image_url);
+                
                 if ($image_path && file_exists($image_path)) {
                     try {
-                        $image_info = getimagesize($image_path);
+                        $image_info = @getimagesize($image_path);
                         
                         if ($image_info !== false) {
                             list($original_width, $original_height) = $image_info;
                             
                             if ($original_width > 0 && $original_height > 0) {
-                                // Calcular dimensiones proporcionales
-                                $ratio = $original_height / $original_width;
+                                // Calcular dimensiones para ajuste perfecto
+                                $width_ratio = $image_width / $original_width;
+                                $height_ratio = $image_height / $original_height;
                                 
-                                if ($ratio > 1) {
-                                    // Imagen vertical
-                                    $calculated_height = min($image_height, $image_width * $ratio);
-                                    $calculated_width = $calculated_height / $ratio;
-                                } else {
-                                    // Imagen horizontal o cuadrada
-                                    $calculated_width = $image_width;
-                                    $calculated_height = $image_width * $ratio;
-                                    
-                                    if ($calculated_height > $image_height) {
-                                        $calculated_height = $image_height;
-                                        $calculated_width = $image_height / $ratio;
-                                    }
-                                }
+                                // Usar el ratio menor para que quepa completamente
+                                $ratio = min($width_ratio, $height_ratio);
+                                
+                                $calculated_width = $original_width * $ratio;
+                                $calculated_height = $original_height * $ratio;
                                 
                                 // Centrar imagen en el contenedor
                                 $image_offset_x = $image_x + (($image_width - $calculated_width) / 2);
@@ -269,15 +296,38 @@ class WFX_PDF_Generator {
                                 $pdf->SetDrawColor(200, 200, 200);
                                 $pdf->Rect($image_x, $content_y, $image_width, $image_height, 'D');
                                 
-                                // Insertar imagen
-                                $pdf->Image($image_path, $image_offset_x, $image_offset_y, $calculated_width, $calculated_height, '', '', '', false, 300, '', false, false, 0);
+                                // Insertar imagen perfectamente ajustada y centrada
+                                $pdf->Image(
+                                    $image_path,
+                                    $image_offset_x,
+                                    $image_offset_y,
+                                    $calculated_width,
+                                    $calculated_height,
+                                    '',
+                                    '',
+                                    '',
+                                    false,
+                                    300,
+                                    '',
+                                    false,
+                                    false,
+                                    0
+                                );
+                                
+                                // Limpiar archivo temporal si existe
+                                if (strpos($image_path, 'wfx-temp-') !== false && file_exists($image_path)) {
+                                    @unlink($image_path);
+                                }
+                                
+                            } else {
+                                $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error');
                             }
                         } else {
-                            $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error de imagen');
+                            $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error');
                         }
                     } catch (Exception $e) {
-                        error_log('WFX Wholesale: Product image error: ' . $e->getMessage());
-                        $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error de imagen');
+                        error_log('WFX Wholesale: Image render error: ' . $e->getMessage());
+                        $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Error');
                     }
                 } else {
                     $this->draw_image_placeholder($pdf, $image_x, $content_y, $image_width, $image_height, 'Sin imagen');
@@ -511,26 +561,31 @@ class WFX_PDF_Generator {
             return false;
         }
         
-        // Limpiar URL
+        // Forzar HTTPS para evitar Mixed Content
+        $url = str_replace('http://', 'https://', $url);
         $url = esc_url_raw($url);
         
         $upload_dir = wp_upload_dir();
-        $path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $url);
+        $path = str_replace(
+            array($upload_dir['baseurl'], str_replace('https://', 'http://', $upload_dir['baseurl'])),
+            $upload_dir['basedir'],
+            $url
+        );
         
         // Verificar que el archivo existe y es una imagen válida
         if (file_exists($path)) {
             $allowed_types = array('image/jpeg', 'image/jpg', 'image/png', 'image/gif');
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
             
-            if ($finfo !== false) {
+            if ($finfo) {
                 $mime_type = finfo_file($finfo, $path);
                 finfo_close($finfo);
                 
-                if ($mime_type !== false && in_array($mime_type, $allowed_types)) {
-                    return $path;
+                if (in_array($mime_type, $allowed_types)) {
+                    // Optimizar imagen para PDF si es necesaria
+                    $optimized_path = WFX_Image_Optimizer::optimize_for_pdf($path);
+                    return $optimized_path ? $optimized_path : $path;
                 }
-            } else {
-                error_log('WFX Wholesale: finfo_open failed - unable to validate image MIME type');
             }
         }
         

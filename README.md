@@ -2,7 +2,7 @@
 
 Plugin profesional de WordPress/WooCommerce para generar catálogos PDF de productos mayoristas.
 
-![Version](https://img.shields.io/badge/version-1.1.5-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.6-blue.svg)
 ![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue.svg)
 ![WooCommerce](https://img.shields.io/badge/WooCommerce-5.0%2B-purple.svg)
 ![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)
@@ -163,6 +163,22 @@ _(Las capturas se añadirán en futuras versiones)_
 
 ## 🔄 Changelog
 
+### Version 1.1.6 (2026-01-03)
+🚀 **Mejoras de Rendimiento:**
+- Fixed: Generación de PDF falla con más de 7 productos
+- Added: Optimización automática de imágenes al subir (máx 1200px)
+- Added: Redimensionamiento inteligente para PDF (máx 800px)
+- Improved: Límites PHP aumentados (256M RAM, 300s timeout)
+- Fixed: Mixed Content warnings (forzar HTTPS en todas las URLs)
+- Improved: Ajuste perfecto de imágenes en contenedor 60x60mm
+- Added: Centrado preciso horizontal y vertical de imágenes
+- Added: Paginación automática cada 10 productos
+- Improved: Liberación de memoria después de cada 5 productos
+- Added: Limpieza de output buffer antes de generar PDF
+- Added: Clase WFX_Image_Optimizer para optimización automática
+- Fixed: Cálculo de ratio usando min() para ajuste perfecto
+- Added: Limpieza automática de archivos temporales
+
 ### Version 1.1.5 (2026-01-02)
 🔧 **Correcciones Críticas:**
 - Fixed: Eliminado emoji 🛒 que causaba signo ? en PDF
@@ -312,8 +328,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 **Desarrollado por**: WFX Telematics  
 **Autor**: WFX Telematics  
-**Versión**: 1.1.4  
-**Última actualización**: 2026-01-02
+**Versión**: 1.1.6  
+**Última actualización**: 2026-01-03
 
 ## 🙏 Agradecimientos
 
