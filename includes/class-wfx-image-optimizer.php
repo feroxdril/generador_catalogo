@@ -135,7 +135,7 @@ class WFX_Image_Optimizer {
         }
         
         // Crear versión optimizada temporal
-        $upload_dir = wp_get_upload_dir();
+        $upload_dir = wp_upload_dir();
         $temp_filename = 'wfx-temp-' . wp_generate_password(12, false, false) . '-' . sanitize_file_name(basename($image_path));
         $temp_path = $upload_dir['basedir'] . '/' . $temp_filename;
         

@@ -58,6 +58,9 @@ class WFX_PDF_Generator {
         if ($exec_time_set === false) {
             error_log('WFX Wholesale: Unable to increase max_execution_time. Current limit: ' . ini_get('max_execution_time'));
         }
+        if ($input_time_set === false) {
+            error_log('WFX Wholesale: Unable to increase max_input_time. Current limit: ' . ini_get('max_input_time'));
+        }
         
         // Limpiar cualquier output previo
         if (ob_get_level()) {
@@ -136,7 +139,9 @@ class WFX_PDF_Generator {
             $filepath = $pdf_dir . $filename;
             
             // Limpiar buffer antes de generar
-            ob_end_clean();
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             
             // Guardar PDF
             $pdf->Output($filepath, 'F');
