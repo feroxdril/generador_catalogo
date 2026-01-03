@@ -136,7 +136,13 @@ class WFX_Image_Optimizer {
         
         // Crear versión optimizada temporal
         $upload_dir = wp_upload_dir();
-        $temp_filename = 'wfx-temp-' . wp_generate_password(12, false, false) . '-' . sanitize_file_name(basename($image_path));
+        // Usar solo extensión del archivo original, no el nombre completo
+        $extension = strtolower(pathinfo($image_path, PATHINFO_EXTENSION));
+        $allowed_extensions = array('jpg', 'jpeg', 'png', 'gif');
+        if (!in_array($extension, $allowed_extensions)) {
+            $extension = 'jpg'; // Fallback
+        }
+        $temp_filename = 'wfx-temp-' . wp_generate_password(12, false, false) . '.' . $extension;
         $temp_path = $upload_dir['basedir'] . '/' . $temp_filename;
         
         try {

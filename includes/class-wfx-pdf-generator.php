@@ -48,9 +48,9 @@ class WFX_PDF_Generator {
      */
     public function generate($product_ids, $options = array()) {
         // Intentar aumentar límites de PHP (puede fallar en algunos hostings)
-        $memory_limit_set = @ini_set('memory_limit', '256M');
-        $exec_time_set = @ini_set('max_execution_time', 300);
-        $input_time_set = @ini_set('max_input_time', 300);
+        $memory_limit_set = ini_set('memory_limit', '256M');
+        $exec_time_set = ini_set('max_execution_time', 300);
+        $input_time_set = ini_set('max_input_time', 300);
         
         if ($memory_limit_set === false) {
             error_log('WFX Wholesale: Unable to increase memory_limit. Current limit: ' . ini_get('memory_limit'));
@@ -329,9 +329,12 @@ class WFX_PDF_Generator {
                                 // Limpiar archivo temporal si existe
                                 $upload_dir = wp_upload_dir();
                                 $temp_dir = $upload_dir['basedir'];
-                                // Verificar que es un archivo temporal creado por nuestro plugin en el directorio correcto
-                                if (strpos($image_path, $temp_dir) === 0 && 
-                                    strpos($image_path, 'wfx-temp-') !== false && 
+                                // Verificar que es un archivo temporal creado por nuestro plugin
+                                $real_image_path = realpath($image_path);
+                                $real_temp_dir = realpath($temp_dir);
+                                if ($real_image_path && $real_temp_dir && 
+                                    strpos($real_image_path, $real_temp_dir) === 0 && 
+                                    strpos(basename($image_path), 'wfx-temp-') === 0 && 
                                     file_exists($image_path)) {
                                     @unlink($image_path);
                                 }
