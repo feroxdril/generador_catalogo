@@ -47,10 +47,17 @@ class WFX_PDF_Generator {
      * Generar PDF del catálogo
      */
     public function generate($product_ids, $options = array()) {
-        // Aumentar límites de PHP
-        @ini_set('memory_limit', '256M');
-        @ini_set('max_execution_time', 300);
-        @ini_set('max_input_time', 300);
+        // Intentar aumentar límites de PHP (puede fallar en algunos hostings)
+        $memory_limit_set = @ini_set('memory_limit', '256M');
+        $exec_time_set = @ini_set('max_execution_time', 300);
+        $input_time_set = @ini_set('max_input_time', 300);
+        
+        if ($memory_limit_set === false) {
+            error_log('WFX Wholesale: Unable to increase memory_limit. Current limit: ' . ini_get('memory_limit'));
+        }
+        if ($exec_time_set === false) {
+            error_log('WFX Wholesale: Unable to increase max_execution_time. Current limit: ' . ini_get('max_execution_time'));
+        }
         
         // Limpiar cualquier output previo
         if (ob_get_level()) {
@@ -315,7 +322,12 @@ class WFX_PDF_Generator {
                                 );
                                 
                                 // Limpiar archivo temporal si existe
-                                if (strpos($image_path, 'wfx-temp-') !== false && file_exists($image_path)) {
+                                $upload_dir = wp_upload_dir();
+                                $temp_dir = $upload_dir['basedir'];
+                                // Verificar que es un archivo temporal creado por nuestro plugin en el directorio correcto
+                                if (strpos($image_path, $temp_dir) === 0 && 
+                                    strpos($image_path, 'wfx-temp-') !== false && 
+                                    file_exists($image_path)) {
                                     @unlink($image_path);
                                 }
                                 
@@ -561,8 +573,10 @@ class WFX_PDF_Generator {
             return false;
         }
         
-        // Forzar HTTPS para evitar Mixed Content
-        $url = str_replace('http://', 'https://', $url);
+        // Solo forzar HTTPS si el sitio usa HTTPS
+        if (is_ssl()) {
+            $url = str_replace('http://', 'https://', $url);
+        }
         $url = esc_url_raw($url);
         
         $upload_dir = wp_upload_dir();

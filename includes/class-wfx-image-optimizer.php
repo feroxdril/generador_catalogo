@@ -135,7 +135,9 @@ class WFX_Image_Optimizer {
         }
         
         // Crear versión optimizada temporal
-        $temp_path = wp_get_upload_dir()['basedir'] . '/wfx-temp-' . basename($image_path);
+        $upload_dir = wp_get_upload_dir();
+        $temp_filename = 'wfx-temp-' . wp_generate_password(12, false, false) . '-' . sanitize_file_name(basename($image_path));
+        $temp_path = $upload_dir['basedir'] . '/' . $temp_filename;
         
         try {
             // Cargar imagen según tipo
@@ -180,8 +182,16 @@ class WFX_Image_Optimizer {
             
             imagecopyresampled($destination, $source, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
             
-            // Guardar como JPEG optimizado
-            imagejpeg($destination, $temp_path, 85);
+            // Guardar según el tipo original para preservar transparencia
+            switch ($type) {
+                case IMAGETYPE_PNG:
+                    imagepng($destination, $temp_path, 6);
+                    break;
+                case IMAGETYPE_JPEG:
+                default:
+                    imagejpeg($destination, $temp_path, 85);
+                    break;
+            }
             
             // Liberar memoria
             imagedestroy($source);
